@@ -26,7 +26,7 @@ for line in f:
     elementos = line.split()
     word = elementos[0]
 
-    # Convertir el resto de los elementos en un array NumPy de tipo float
+    #el resto de los elementos en un array np
     nFila = np.array(elementos[1:], dtype=float)
     
     # Apilar la nueva fila numérica al array
@@ -37,12 +37,8 @@ for line in f:
 
 df = pd.DataFrame(arr, index=palabras, columns=list("npxyjz"))
 
-# print(df)
-# df['x']
 # print(df['x'].max())
-# print(df['y'].max())
-# print(df['j'].max())
-# print(df['z'].max())
+
 plt.style.use('fivethirtyeight')
 plt.figure(1 , figsize = (25 , 6))
 n = 0 
@@ -52,7 +48,8 @@ n = 0
 #     plt.subplots_adjust(hspace =0.5 , wspace = 0.5)
 #     sns.histplot(df[x] , bins = 20, kde=True)
 #     plt.title('Distplot of {}'.format(x))
-    
+
+#esto muestra las agrupaciones por lineas  
 for x in ['y']:
     n += 1
     plt.subplot(1 , 1 , n)
@@ -64,23 +61,47 @@ plt.show()
 
 
 ############################# 20 linies ###########################################
-lines = df[['y', 'z']]
+
+###esto re de moment 
+
 columns = df[['x', 'j']]
 
 prim = df[['y','x']]
 nPrim = preprocessing.normalize(prim)
 
 x = df['x']
-
 completo = preprocessing.normalize(df)
+#####
+
+# Función para calcular distorsión (inertia en sklearn)
+def calcular_distorsion(data, max_k, umbral_distorsion):
+    distorsiones = []
+    k_valores = []
+    
+    for k in range(1, max_k + 1):
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        kmeans.fit(data)
+        distorsion = kmeans.inertia_
+        distorsiones.append(distorsion)
+        k_valores.append(k)
+        
+        # Verificar si la distorsión es menor que el umbral
+        if distorsion < umbral_distorsion:
+            print(f"K óptimo con distorsión < {umbral_distorsion}: {k}")
+            break
+    
+    print( k_valores, distorsiones)
 
 
+lines = df[['y', 'z']]
+
+calcular_distorsion(lines, 22, 1000)
 
 Xli = preprocessing.normalize(lines)
 model = KMeans()
 visualizer= KElbowVisualizer(model, k=(10,25))
 visualizer.fit(lines)
-#visualizer.show()
+visualizer.show()
 
 #- kmeans++ intenta inicializar los centroides de manera inteligente 
 #- n_init = 10 indica que el algoritmo se iniciará 10 veces ocn distintos centroides y se seleccionara el mejor (para evitar minimos locales)
@@ -127,7 +148,7 @@ for label, dataframe in dfs_by_label.items():
 
     Xli = preprocessing.normalize(columns)
     model = KMeans()
-    visualizer= KElbowVisualizer(model, k=(1,10))
+    visualizer= KElbowVisualizer(model, k=(1,10), str="silhouette")
     visualizer.fit(lines)
     visualizer.show()
 
