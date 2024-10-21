@@ -23,12 +23,9 @@ palabras = []
 
 for line in f:
 
-  
     elementos = line.split()
-        
-    # Extraer el primer elemento (puede ser un string)
     word = elementos[0]
-    
+
     # Convertir el resto de los elementos en un array NumPy de tipo float
     nFila = np.array(elementos[1:], dtype=float)
     
@@ -40,10 +37,12 @@ for line in f:
 
 df = pd.DataFrame(arr, index=palabras, columns=list("npxyjz"))
 
-print(df['x'].max())
-print(df['y'].max())
-print(df['j'].max())
-print(df['z'].max())
+# print(df)
+# df['x']
+# print(df['x'].max())
+# print(df['y'].max())
+# print(df['j'].max())
+# print(df['z'].max())
 plt.style.use('fivethirtyeight')
 plt.figure(1 , figsize = (25 , 6))
 n = 0 
@@ -81,7 +80,7 @@ Xli = preprocessing.normalize(lines)
 model = KMeans()
 visualizer= KElbowVisualizer(model, k=(10,25))
 visualizer.fit(lines)
-visualizer.show()
+#visualizer.show()
 
 #- kmeans++ intenta inicializar los centroides de manera inteligente 
 #- n_init = 10 indica que el algoritmo se iniciará 10 veces ocn distintos centroides y se seleccionara el mejor (para evitar minimos locales)
@@ -101,12 +100,35 @@ centroids = algorithm.cluster_centers_
 
 df['label'] =  labels
 
-
-fig = px.scatter(df, x="x", y="y")
-fig.show()
+#grafica xula de firefox 
+#fig = px.scatter(df, x="x", y="y")
+#fig.show()
 
 
 #df.drop(['x'], 1).hist()
-#plt.show()
+
+
+# Inicializar un diccionario para almacenar DataFrames por label
+dfs_by_label = {}
+
+# Iterar sobre los valores únicos de 'label'
+for label in df['label'].unique():
+    # Filtrar el DataFrame por el valor de 'label'
+    filtered_df = df[df['label'] == label]
+    
+    # Almacenar el DataFrame en el diccionario
+    dfs_by_label[label] = filtered_df
+
+# Mostrar los DataFrames creados
+for label, dataframe in dfs_by_label.items():
+    print(f"\nDataFrame for label {label}:\n{dataframe}")
+
+    columns = dataframe[['x', 'j']]
+
+    Xli = preprocessing.normalize(columns)
+    model = KMeans()
+    visualizer= KElbowVisualizer(model, k=(1,10))
+    visualizer.fit(lines)
+    visualizer.show()
 
 

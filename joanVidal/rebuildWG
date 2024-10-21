@@ -1,0 +1,95 @@
+#!/bin/bash
+#./rebuildWG prix2transcr/testPages/AGS_CCA_CED_0322p5p13.txt 3 13 500 405 5 
+
+export LC_ALL=es_ES.UTF-8
+
+dC=5
+ALT=10
+
+if [ $# -eq 0 ]; then
+  echo $0 idx-file carp pag x y [thrh]
+  exit
+else
+  if [ $# -eq 6 ]; then
+    dC=$6
+  fi
+fi
+
+TMPF=`basename $1`
+
+rm -rf /tmp/cmdwg
+rm -rf wg.* dat*
+
+cat $1 | grep " $2 $3 " | cut -f 4- -d " " | awk -v xC=$4 -v yC=$5 -v umbC=$dC '
+{
+  xCenter=($6+$4)/2; yCenter=($5+$7)/2;
+  difCent=yCenter-yC;
+  if (difCent < 0) difCent = -difCent;
+  if (difCent <= umbC) 
+    printf("%s %s %d %d %d %d\n",$1,$3,$4,$5,$6,$7);
+}' > /tmp/.trash-${TMPF}-BB
+
+NLIN=`cat /tmp/.trash-${TMPF}-BB | wc -l`
+if [ $NLIN -eq 0 ]; then
+  echo "Error: line \""$2"\" not found." > /dev/stderr
+  exit -1
+fi	
+
+echo "
+set term pdf color
+set out 'wg-plot.pdf'
+set yrange [0:$ALT+2]
+unset key
+" >> /tmp/cmdwg
+cat /tmp/.trash-${TMPF}-BB | sort -n -k3 -k4 -k2 | \
+awk -v A=$ALT -v nL=$NLIN 'BEGIN{
+    nodo=1; l=1; max=0; 
+    for (i=0;i<3000;i++) pA[i]=1.0; 
+    antPost["I"] = 1.0; yTL["I"]=0; xBR["I"]=0; yBR["I"]=5;nL++;
+  }
+  {
+    # BoundingBox
+    printf("set arrow %d from %d,%d to %d,%d nohead lw %f lc rgb \"black\" dt 1\n",
+            nodo,$3,(nodo%A) + 2,$5,(nodo%A) + 2,$2*10);
+    for (ant in antPost) {
+      split(ant,infoAnt,":");
+      #post = $2;
+      post = antPost[ant];
+      if (xBR[infoAnt[2]] <= $3 && antPost[ant] > 0.0 && post > 0.0) {	
+        if (post <= antPost[ant]) {
+          antPost[ant] -= post; 
+          post = 0.0;
+          listEdgesName[infoAnt[2]":"$5] = "<sp>";
+        }
+        else {
+          post -= antPost[ant];
+          antPost[ant] = 0.0;
+        }
+        printf("set arrow %d from %d,%d to %d,%d nohead lw 0.5 lc rgb \"blue\"\n",
+                nL++,xBR[ant],yBR[ant],$3,(nodo%A) + 2);
+        nameNod = sprintf("%s:%s",yBR[ant],$3); # nodos=espacios en blanco
+        listNod[yBR[ant]] = 1;   
+        listNod[$3] = 1;
+      }
+    }
+    antPost[$1":"$3":"$5] = $2;  
+    yTL[$1":"$3":"$5]=$4; xBR[$1":"$3":"$5]=$5; yBR[$1":"$3":"$5]=(nodo%A) + 2;
+    printf("set label %d at %f,%f \"%s\" font \",6\" \n",
+            l,$3,nodo%A + 1.855 - $2*.25, $1);l++;
+    printf("set label %d at %f,%f \"%s\" font \",6\" \n",
+            l,$3,nodo%A + 2.245 + $2*.25, $2);nodo++;l++; 
+    printf("%d %d\n",$3,A+2) >> "datNI";
+    printf("%d %d\n",$5,A+2) >> "datNF";
+    listEdgesName[$3":"$5] = $1;
+    listEdgesProb[$3":"$5] = $2;
+    if ($5 > max) max=$5;
+    for  (i=$3;i<$5;i++) pA[i] -= $2;
+  }
+  END{printf("set xrange[-2:%d]\n",max+15);
+  for (i=0;i<max+15;i++) printf("%d %f\n",i,1-pA[i]) >> "datP";
+  printf("#E: %d\n",nodo)
+}'  >> /tmp/cmdwg
+
+echo "plot 'datP' u 1:2 w l, 'datNI' w i lw 0.2 lc rgb \"blue\" dt 2, 'datNF' w i lw 0.2 lc rgb \"red\" dt 2" >> /tmp/cmdwg
+gnuplot -p /tmp/cmdwg
+
