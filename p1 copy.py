@@ -48,6 +48,8 @@ for x in ['y']:
     
 plt.show()
 
+############################# 20 linies ###########################################
+
 
 # Función para calcular distorsión (inertia en sklearn)
 def calcular_distorsion(data, max_k, umbral_distorsion):
@@ -72,18 +74,19 @@ def calcular_distorsion(data, max_k, umbral_distorsion):
 lines = df[['y', 'z']]
 columns = df[['x', 'j']]
 
-lineaB = df[['y']]
-
 #elbow de lineas
-Xli = preprocessing.normalize(lineaB)
+Xli = preprocessing.normalize(lines)
 model = KMeans()
 visualizer= KElbowVisualizer(model, k=(10,25))
-visualizer.fit(Xli)
+visualizer.fit(lines)
 visualizer.show()
 print(visualizer.elbow_value_, visualizer.estimator)
 
-
-
+#- kmeans++ intenta inicializar los centroides de manera inteligente 
+#- n_init = Se iniciará 10 veces ocn distintos centroides y se seleccionara el mejor (para evitar minimos locales)
+#- Tol para cuando los centroides se muevan menos de esta distancia se parará 
+# -Algorithm='elkan': Algoritmo subyacente 'elkan', versión más rápida de K-Means que utiliza ciertas optimizaciones geométricas. 
+#  para conjuntos de datos de baja dimensionalidad y puede acelerar el proceso de agrupación.
 
 algorithm = KMeans(n_clusters = 20 ,init='k-means++', n_init = 10 ,max_iter=300, 
                         tol=0.0001,  random_state= 111  , algorithm='elkan')
@@ -91,16 +94,25 @@ algorithm.fit(Xli)
 labels = algorithm.labels_ # etiquetas de clusters (K)
 centroids = algorithm.cluster_centers_
 
-# df['label'] = labels: nueva columna al DataFrame df llamada 'label', que contiene las etiquetas de los clusters para cada fila de datos. 
+# df['label'] = labels: Aquí estás añadiendo una nueva columna al DataFrame df llamada 'label', que contiene las etiquetas de los clusters para cada fila de datos. 
+# Esto te permite saber a qué cluster pertenece cada punto de datos en el DataFrame original.
 
 df['label'] =  labels
 
+#Grafica xula de firefox 
+#fig = px.scatter(df, x="x", y="y")
+#fig.show()
 
 
+#df.drop(['x'], 1).hist()
+
+
+# Inicializar un diccionario para almacenar DataFrames por label
 dfs_by_label = {}
 
+# Iterar sobre los valores únicos de 'label'
 for label in df['label'].unique():
-    # Filtra
+    # Filtrar el DataFrame por el valor de 'label'
     filtered_df = df[df['label'] == label]
     
     # Almacenar el DataFrame en el diccionario
@@ -116,7 +128,7 @@ for label, dataframe in dfs_by_label.items():
     Xli = preprocessing.normalize(columns)
     model = KMeans()
     visualizer= KElbowVisualizer(model, k=(1,8))
-    visualizer.fit(Xli)
+    visualizer.fit(lines)
     #visualizer.show()
 
 
