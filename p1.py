@@ -17,17 +17,10 @@ arr = np.empty((0, 6))
 palabras = []
 
 for line in f:
-
     elementos = line.split()
     word = elementos[0]
-
-    #el resto de los elementos en un array np
     nFila = np.array(elementos[1:], dtype=float)
-    
-    # Apilar la nueva fila numérica al array
     arr = np.vstack([arr, nFila])
-    
-    # Agregar el primer elemento a la lista de primeros elementos
     palabras.append(word)
 
 df = pd.DataFrame(arr, index=palabras, columns=list("npxyjz"))
@@ -47,27 +40,6 @@ for x in ['y']:
     plt.title('Distplot of {}'.format(x))
     
 plt.show()
-
-
-# Función para calcular distorsión (inertia en sklearn)
-def calcular_distorsion(data, max_k, umbral_distorsion):
-    distorsiones = []
-    k_valores = []
-    
-    for k in range(1, max_k + 1):
-        kmeans = KMeans(n_clusters=k, random_state=42)
-        kmeans.fit(data)
-        distorsion = kmeans.inertia_
-        distorsiones.append(distorsion)
-        k_valores.append(k)
-        
-        # Verificar si la distorsión es menor que el umbral
-        if distorsion < umbral_distorsion:
-            print(f"K óptimo con distorsión < {umbral_distorsion}: {k}")
-            break
-    
-    print( k_valores, distorsiones)
-
 
 lines = df[['y', 'z']]
 columns = df[['x', 'j']]
@@ -98,7 +70,6 @@ df['label'] =  labels
 
 
 dfs_by_label = {}
-
 for label in df['label'].unique():
     # Filtra
     filtered_df = df[df['label'] == label]
@@ -109,14 +80,15 @@ for label in df['label'].unique():
 
 # Mostrar los DataFrames creados
 for label, dataframe in dfs_by_label.items():
-    print(f"\nDataFrame for label {label}:\n{dataframe}")
+    if label == 2:
+        print(f"\nDataFrame for label {label}:\n{dataframe}")
 
     columns = dataframe[['x']]
 
-    Xli = preprocessing.normalize(columns)
+    Xcol = preprocessing.normalize(columns)
     model = KMeans()
     visualizer= KElbowVisualizer(model, k=(1,8))
-    visualizer.fit(Xli)
+    visualizer.fit(Xcol)
     #visualizer.show()
 
 
