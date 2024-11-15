@@ -22,12 +22,14 @@ for line in f:
     
     # Agregar el primer elemento a la lista de primeros elementos
     palabras.append(word)
+    
 
 df = pd.DataFrame(arr, index=palabras, columns=list("npxyjz"))
-
-xnorm = preprocessing.normalize(df[['x']])
-ynorm = preprocessing.normalize(df[['y']])
+df['unos'] = 1
+xnorm = preprocessing.normalize(df[['x','y']])
 norma = []
+
+#xnorm = df[['x']]
 
 xkmeans_algorithm = KMeans(
     n_clusters=20,  # Ajusta según el número de grupos esperados
@@ -39,34 +41,22 @@ xkmeans_algorithm = KMeans(
     algorithm='elkan'
 )
 
-xkmeans_algorithm.fit(xnorm, ynorm)
+xkmeans_algorithm.fit(xnorm)
 
 
 # xkmeans_algorithm.fit(xnorm)
 labels_x = xkmeans_algorithm.labels_
 centroids_x = xkmeans_algorithm.cluster_centers_
 
-
-# ykmeans_algorithm = KMeans(
-#     n_clusters=20,  # Ajusta según el número de grupos esperados
-#     init='k-means++',
-#     n_init=10,
-#     max_iter=300,
-#     tol=0.0001,
-#     random_state=111,
-#     algorithm='elkan'
-# )
-# ykmeans_algorithm.fit(ynorm)
-# labels_y = ykmeans_algorithm.labels_
-# centroids_y = ykmeans_algorithm.cluster_centers_
-
+print(xnorm[:,1])
 
 # Crear la gráfica
 plt.figure(figsize=(12, 8))
-plt.scatter(xnorm, ynorm, c=labels_x, cmap='viridis', marker='o', label="Puntos de datos")
+plt.scatter(xnorm[:,0], xnorm[:,1], c=labels_x, cmap='viridis', marker='o', label="Puntos de datos")
 plt.scatter(centroids_x[:,0], centroids_x[:,1], c='red', marker='x', s=150, label="Centroides")
 plt.title("Agrupación de coordenadas x-y usando KMeans")
 plt.xlabel("Coordenada x (normalizada)")
 plt.ylabel("Coordenada y (normalizada)")
 plt.legend()
 plt.show()
+

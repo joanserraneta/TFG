@@ -24,7 +24,7 @@ for line in f:
     palabras.append(word)
 
 df = pd.DataFrame(arr, index=palabras, columns=list("npxyjz"))
-df.sort_values(by=['y'])
+
 # print(df['x'].max())
 
 plt.style.use('fivethirtyeight')
